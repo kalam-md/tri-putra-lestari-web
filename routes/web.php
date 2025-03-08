@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\BahanBajuController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ModelBajuController;
+use App\Http\Controllers\PesananController;
 use App\Http\Controllers\UkuranController;
 use Illuminate\Support\Facades\Route;
 
@@ -23,3 +25,5 @@ Route::get('/', function () {
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
 Route::resource('ukuran', UkuranController::class);
 Route::resource('bahan-baju', BahanBajuController::class);
+Route::resource('model-baju', ModelBajuController::class);
+Route::get('/pesanan', [PesananController::class, 'index'])->name('pesanan.index');
