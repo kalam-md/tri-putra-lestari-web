@@ -13,7 +13,6 @@
                         <form action="{{ route('model-baju.update', $model_baju->id) }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             @method('PUT')
-
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
@@ -35,32 +34,6 @@
                                     </div>
 
                                     <div class="form-group mb-3">
-                                        <label for="stok">Stok</label>
-                                        <input type="number" class="form-control @error('stok') is-invalid @enderror" 
-                                               id="stok" name="stok" value="{{ old('stok', $model_baju->stok) }}">
-                                        @error('stok')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="form-group mb-3">
-                                        <label for="ukuran_id">Ukuran</label>
-                                        <select class="form-select @error('ukuran_id') is-invalid @enderror" id="ukuran_id" name="ukuran_id">
-                                            <option value="">-- Pilih Ukuran --</option>
-                                            @foreach($ukurans as $ukuran)
-                                                <option value="{{ $ukuran->id }}" {{ old('ukuran_id', $model_baju->ukuran_id) == $ukuran->id ? 'selected' : '' }}>
-                                                    {{ $ukuran->ukuran_baju }} (P.Badan: {{ $ukuran->panjang_badan }}cm, 
-                                                    P.Tangan: {{ $ukuran->panjang_tangan }}cm, 
-                                                    L.Dada: {{ $ukuran->lebar_dada }}cm)
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('ukuran_id')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="form-group mb-3">
                                         <label for="bahan_id">Bahan</label>
                                         <select class="form-select @error('bahan_id') is-invalid @enderror" id="bahan_id" name="bahan_id">
                                             <option value="">-- Pilih Bahan --</option>
@@ -75,7 +48,6 @@
                                         @enderror
                                     </div>
                                 </div>
-
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
                                         <label for="keterangan">Keterangan</label>
@@ -86,39 +58,110 @@
                                         @enderror
                                     </div>
 
-                                    <!-- Menampilkan Gambar Lama -->
                                     <div class="form-group mb-3">
-                                        <label>Gambar Lama</label>
-                                        <div class="d-flex flex-wrap">
-                                            @foreach(json_decode($model_baju->gambar, true) as $gambar)
-                                                <div class="m-2">
-                                                    <img src="{{ asset('/model_baju/' . $gambar) }}" class="border rounded" 
-                                                         style="max-width: 120px; max-height: 120px; object-fit: cover;">
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    </div>
-
-                                    <!-- Input untuk Upload Gambar Baru -->
-                                    <div class="form-group mb-3">
-                                        <label for="gambar">Gambar Baru (Optional, Multiple)</label>
+                                        <label for="gambar">Gambar (Multiple)</label>
                                         <input type="file" class="form-control @error('gambar.*') is-invalid @enderror" 
                                                id="gambar" name="gambar[]" accept="image/*" multiple onchange="previewImages(event)">
-                                        <div class="form-text">Upload gambar baru jika ingin mengganti yang lama. Maks 2MB per gambar.</div>
+                                        <div class="form-text">Anda dapat memilih beberapa gambar sekaligus. Maks 2MB per gambar.</div>
                                         @error('gambar.*')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
 
-                                    <!-- Preview Gambar Baru -->
+                                    @if($model_baju->gambar)
+                                    <div class="mt-3">
+                                        <label>Gambar Saat Ini:</label>
+                                        <div class="d-flex flex-wrap">
+                                            @foreach(json_decode($model_baju->gambar) as $gambar)
+                                                <div class="m-2">
+                                                    <img src="{{ asset('model_baju/' . $gambar) }}" 
+                                                         alt="Gambar Model" 
+                                                         class="img-thumbnail" 
+                                                         style="width: 100px; height: 100px; object-fit: cover;">
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                        <div class="form-text text-muted">Upload gambar baru untuk mengganti gambar lama</div>
+                                    </div>
+                                    @endif
+
                                     <div class="image-previews mt-3 d-flex flex-wrap" id="image-previews">
-                                        <!-- Preview gambar akan muncul di sini -->
+                                        <!-- Preview gambar akan ditampilkan di sini -->
                                     </div>
                                 </div>
                             </div>
-
+                            
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header bg-light">
+                                            <h5 class="mb-0">Pilih Ukuran dan Stok</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table class="table table-bordered" id="ukuran-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th width="50px">Pilih</th>
+                                                            <th>Ukuran</th>
+                                                            <th>Panjang Badan</th>
+                                                            <th>Panjang Tangan</th>
+                                                            <th>Lebar Dada</th>
+                                                            <th width="150px">Stok</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach($ukurans as $ukuran)
+                                                        @php
+                                                            $selectedUkuran = $model_baju->ukurans->firstWhere('id', $ukuran->id);
+                                                            $isChecked = $selectedUkuran ? true : false;
+                                                            $stokValue = $selectedUkuran ? $selectedUkuran->pivot->stok : 0;
+                                                        @endphp
+                                                        <tr>
+                                                            <td class="text-center">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input ukuran-checkbox" type="checkbox" 
+                                                                           name="ukuran_id[]" value="{{ $ukuran->id }}" 
+                                                                           id="ukuran-{{ $ukuran->id }}"
+                                                                           {{ $isChecked ? 'checked' : '' }}
+                                                                           onchange="toggleUkuranStok(this)">
+                                                                </div>
+                                                            </td>
+                                                            <td>{{ $ukuran->ukuran_baju }}</td>
+                                                            <td>{{ $ukuran->panjang_badan }} cm</td>
+                                                            <td>{{ $ukuran->panjang_tangan }} cm</td>
+                                                            <td>{{ $ukuran->lebar_dada }} cm</td>
+                                                            <td>
+                                                                <input type="number" class="form-control stok-input" 
+                                                                       name="stok[{{ $loop->index }}]" 
+                                                                       value="{{ old('stok.' . $loop->index, $stokValue) }}"
+                                                                       min="0" 
+                                                                       {{ !$isChecked ? 'disabled' : '' }}>
+                                                            </td>
+                                                        </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                    <tfoot>
+                                                        <tr>
+                                                            <th colspan="5" class="text-end">Total Stok:</th>
+                                                            <th><span id="total-stok">0</span></th>
+                                                        </tr>
+                                                    </tfoot>
+                                                </table>
+                                            </div>
+                                            @error('ukuran_id')
+                                                <div class="text-danger mt-2">{{ $message }}</div>
+                                            @enderror
+                                            @error('stok.*')
+                                                <div class="text-danger mt-2">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <div class="form-group mt-3">
-                                <button type="submit" class="btn btn-primary">Update</button>
+                                <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
                                 <a href="{{ route('model-baju.index') }}" class="btn btn-secondary">Batal</a>
                             </div>
                         </form>
@@ -129,13 +172,12 @@
     </section>
 </div>
 
-<!-- JavaScript untuk Preview Gambar -->
 <script>
     function previewImages(event) {
         const input = event.target;
         const previewContainer = document.getElementById('image-previews');
         
-        // Hapus preview sebelumnya
+        // Clear previous previews
         previewContainer.innerHTML = '';
         
         if (input.files && input.files.length > 0) {
@@ -149,8 +191,8 @@
                     const image = document.createElement('img');
                     image.src = e.target.result;
                     image.alt = 'Preview Gambar';
-                    image.style.maxWidth = '120px';
-                    image.style.maxHeight = '120px';
+                    image.style.maxWidth = '150px';
+                    image.style.maxHeight = '150px';
                     image.style.objectFit = 'cover';
                     image.className = 'border rounded';
                     
@@ -162,5 +204,40 @@
             }
         }
     }
+    
+    function toggleUkuranStok(checkbox) {
+        const row = checkbox.closest('tr');
+        const stokInput = row.querySelector('.stok-input');
+        
+        stokInput.disabled = !checkbox.checked;
+        if (!checkbox.checked) {
+            stokInput.value = 0;
+        }
+        
+        updateTotalStok();
+    }
+    
+    function updateTotalStok() {
+        let total = 0;
+        const stokInputs = document.querySelectorAll('.stok-input:not([disabled])');
+        
+        stokInputs.forEach(input => {
+            total += parseInt(input.value) || 0;
+        });
+        
+        document.getElementById('total-stok').textContent = total;
+    }
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add event listeners to all stok inputs
+        const stokInputs = document.querySelectorAll('.stok-input');
+        stokInputs.forEach(input => {
+            input.addEventListener('input', updateTotalStok);
+        });
+        
+        // Calculate initial total
+        updateTotalStok();
+    });
 </script>
 @endsection

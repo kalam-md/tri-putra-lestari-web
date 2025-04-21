@@ -10,4 +10,11 @@ class Ukuran extends Model
     use HasFactory;
 
     protected $guarded = ['id'];
+
+    public function modelBajus()
+{
+    return $this->belongsToMany(ModelBaju::class, 'model_baju_ukuran')
+                ->withPivot('stok')
+                ->withTimestamps();
+}
 }

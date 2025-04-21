@@ -18,8 +18,6 @@ return new class extends Migration
             $table->decimal('harga', 10, 2); 
             $table->text('keterangan')->nullable(); 
             $table->string('gambar')->nullable();
-            $table->unsignedBigInteger('ukuran_id');
-            $table->foreign('ukuran_id')->references('id')->on('ukurans')->onDelete('cascade');
             $table->unsignedBigInteger('bahan_id');
             $table->foreign('bahan_id')->references('id')->on('bahan_bajus')->onDelete('cascade');
             $table->timestamps();

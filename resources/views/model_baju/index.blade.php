@@ -75,7 +75,26 @@
                                             @endif
                                         </td>
                                         <td>{{ $model->nama_model }}</td>
-                                        <td>{{ $model->ukuran->ukuran_baju }}</td>
+                                        <td>
+                                            @if($model->ukurans->count() > 0)
+                                                <button class="btn btn-sm btn-outline-primary btn-ukuran" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#ukuranModal"
+                                                        data-ukuran-list="{{ json_encode($model->ukurans->map(function($ukuran) {
+                                                            return [
+                                                                'ukuran' => $ukuran->ukuran_baju,
+                                                                'panjang_badan' => $ukuran->panjang_badan,
+                                                                'panjang_tangan' => $ukuran->panjang_tangan,
+                                                                'lebar_dada' => $ukuran->lebar_dada,
+                                                                'stok' => $ukuran->pivot->stok
+                                                            ];
+                                                        })) }}">
+                                                    Lihat Detail Ukuran
+                                                </button>
+                                            @else
+                                                <span class="text-muted">Tidak ada ukuran</span>
+                                            @endif
+                                        </td>
                                         <td>{{ $model->bahanBaju->nama_bahan }}</td>
                                         <td>Rp {{ number_format($model->harga, 0, ',', '.') }}</td>
                                         <td>{{ $model->stok }}</td>
@@ -84,10 +103,18 @@
                                                 data-bs-toggle="modal" 
                                                 data-bs-target="#detailModal"
                                                 data-title="{{ $model->nama_model }}"
-                                                data-ukuran="{{ $model->ukuran->ukuran_baju }}"
                                                 data-bahan="{{ $model->bahanBaju->nama_bahan }}"
                                                 data-harga="{{ number_format($model->harga, 0, ',', '.') }}"
                                                 data-stok="{{ $model->stok }}"
+                                                data-ukuran-list="{{ json_encode($model->ukurans->map(function($ukuran) {
+                                                    return [
+                                                        'ukuran' => $ukuran->ukuran_baju,
+                                                        'panjang_badan' => $ukuran->panjang_badan,
+                                                        'panjang_tangan' => $ukuran->panjang_tangan,
+                                                        'lebar_dada' => $ukuran->lebar_dada,
+                                                        'stok' => $ukuran->pivot->stok
+                                                    ];
+                                                })) }}"
                                                 data-images="{{ json_encode($gambarArray) }}">
                                                 <i data-feather="eye"></i>
                                             </a>
@@ -165,10 +192,29 @@
                         <!-- Detail Produk -->
                         <div class="card-body">
                             <h4 class="card-title" id="modal-title"></h4>
-                            <p class="card-text"><strong>Ukuran:</strong> <span id="modal-ukuran"></span></p>
                             <p class="card-text"><strong>Bahan:</strong> <span id="modal-bahan"></span></p>
                             <p class="card-text"><strong>Harga:</strong> Rp <span id="modal-harga"></span></p>
-                            <p class="card-text"><strong>Stok:</strong> <span id="modal-stok"></span></p>
+                            <p class="card-text"><strong>Total Stok:</strong> <span id="modal-stok"></span></p>
+                            
+                            <div class="mt-3">
+                                <h5>Ukuran yang Tersedia:</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered" id="modal-ukuran-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Ukuran</th>
+                                                <th>Panjang Badan</th>
+                                                <th>Panjang Tangan</th>
+                                                <th>Lebar Dada</th>
+                                                <th>Stok</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="modal-ukuran-body">
+                                            <!-- Data ukuran akan dimasukkan lewat JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -177,6 +223,78 @@
     </div>
 </div>
 
+<!-- Modal untuk Detail Ukuran -->
+<div class="modal fade" id="ukuranModal" tabindex="-1" aria-labelledby="ukuranModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ukuranModalLabel">Detail Ukuran</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Ukuran</th>
+                                <th>Panjang Badan</th>
+                                <th>Panjang Tangan</th>
+                                <th>Lebar Dada</th>
+                                <th>Stok</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ukuranModalBody">
+                            <!-- Data akan diisi oleh JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Menangani modal detail ukuran
+        const ukuranButtons = document.querySelectorAll(".btn-ukuran");
+        
+        ukuranButtons.forEach(button => {
+            button.addEventListener("click", function () {
+                const ukuranList = JSON.parse(this.getAttribute("data-ukuran-list"));
+                const ukuranModalBody = document.getElementById("ukuranModalBody");
+                ukuranModalBody.innerHTML = ""; // Bersihkan isi sebelumnya
+                
+                if (ukuranList && ukuranList.length > 0) {
+                    ukuranList.forEach(item => {
+                        ukuranModalBody.innerHTML += `
+                            <tr>
+                                <td>${item.ukuran}</td>
+                                <td>${item.panjang_badan} cm</td>
+                                <td>${item.panjang_tangan} cm</td>
+                                <td>${item.lebar_dada} cm</td>
+                                <td>${item.stok}</td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    ukuranModalBody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="text-center">Tidak ada data ukuran</td>
+                        </tr>
+                    `;
+                }
+            });
+        });
+
+        // Script untuk modal detail produk (yang sudah ada)
+        const detailButtons = document.querySelectorAll(".btn-detail");
+        // ... (kode yang sudah ada untuk modal detail produk)
+    });
+</script>
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const detailButtons = document.querySelectorAll(".btn-detail");
@@ -184,24 +302,47 @@
         detailButtons.forEach(button => {
             button.addEventListener("click", function () {
                 const title = this.getAttribute("data-title");
-                const ukuran = this.getAttribute("data-ukuran");
                 const bahan = this.getAttribute("data-bahan");
                 const harga = this.getAttribute("data-harga");
                 const stok = this.getAttribute("data-stok");
-                const images = JSON.parse(this.getAttribute("data-images"));
+                const ukuranList = JSON.parse(this.getAttribute("data-ukuran-list"));
+                const images = JSON.parse(this.getAttribute("data-images") || "[]");
 
                 // Set detail produk
                 document.getElementById("modal-title").innerText = title;
-                document.getElementById("modal-ukuran").innerText = ukuran;
                 document.getElementById("modal-bahan").innerText = bahan;
                 document.getElementById("modal-harga").innerText = harga;
                 document.getElementById("modal-stok").innerText = stok;
+
+                // Set data ukuran dalam tabel
+                const ukuranTableBody = document.getElementById("modal-ukuran-body");
+                ukuranTableBody.innerHTML = ""; // Bersihkan isi sebelumnya
+                
+                if (ukuranList && ukuranList.length > 0) {
+                    ukuranList.forEach(item => {
+                        ukuranTableBody.innerHTML += `
+                            <tr>
+                                <td>${item.ukuran}</td>
+                                <td>${item.panjang_badan} cm</td>
+                                <td>${item.panjang_tangan} cm</td>
+                                <td>${item.lebar_dada} cm</td>
+                                <td>${item.stok}</td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    ukuranTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="text-center">Tidak ada data ukuran</td>
+                        </tr>
+                    `;
+                }
 
                 // Set carousel gambar
                 const carouselInner = document.getElementById("carousel-inner");
                 carouselInner.innerHTML = ""; // Bersihkan isi sebelumnya
 
-                if (images.length > 0) {
+                if (images && images.length > 0) {
                     images.forEach((image, index) => {
                         const activeClass = index === 0 ? "active" : "";
                         carouselInner.innerHTML += `

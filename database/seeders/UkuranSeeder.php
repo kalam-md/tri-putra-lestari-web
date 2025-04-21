@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Ukuran;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 class UkuranSeeder extends Seeder
 {
@@ -13,9 +14,10 @@ class UkuranSeeder extends Seeder
      */
     public function run(): void
     {
-        Ukuran::truncate();
-
-        // Predefined sizes with typical measurements
+        Schema::disableForeignKeyConstraints();
+        
+        Ukuran::query()->delete();
+        
         $sizes = [
             ['ukuran_baju' => 'S', 'panjang_badan' => 55, 'panjang_tangan' => 25, 'lebar_dada' => 35],
             ['ukuran_baju' => 'M', 'panjang_badan' => 60, 'panjang_tangan' => 28, 'lebar_dada' => 40],
@@ -31,9 +33,10 @@ class UkuranSeeder extends Seeder
             ['ukuran_baju' => 'Kids L', 'panjang_badan' => 50, 'panjang_tangan' => 24, 'lebar_dada' => 34],
         ];
 
-        // Insert the data
         foreach ($sizes as $size) {
             Ukuran::create($size);
         }
+        
+        Schema::enableForeignKeyConstraints();
     }
 }

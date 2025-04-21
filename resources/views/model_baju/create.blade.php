@@ -33,32 +33,6 @@
                                     </div>
 
                                     <div class="form-group mb-3">
-                                        <label for="stok">Stok</label>
-                                        <input type="number" class="form-control @error('stok') is-invalid @enderror" 
-                                               id="stok" name="stok" value="{{ old('stok', 0) }}">
-                                        @error('stok')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="form-group mb-3">
-                                        <label for="ukuran_id">Ukuran</label>
-                                        <select class="form-select @error('ukuran_id') is-invalid @enderror" id="ukuran_id" name="ukuran_id">
-                                            <option value="">-- Pilih Ukuran --</option>
-                                            @foreach($ukurans as $ukuran)
-                                                <option value="{{ $ukuran->id }}" {{ old('ukuran_id') == $ukuran->id ? 'selected' : '' }}>
-                                                    {{ $ukuran->ukuran_baju }} (P.Badan: {{ $ukuran->panjang_badan }}cm, 
-                                                    P.Tangan: {{ $ukuran->panjang_tangan }}cm, 
-                                                    L.Dada: {{ $ukuran->lebar_dada }}cm)
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('ukuran_id')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="form-group mb-3">
                                         <label for="bahan_id">Bahan</label>
                                         <select class="form-select @error('bahan_id') is-invalid @enderror" id="bahan_id" name="bahan_id">
                                             <option value="">-- Pilih Bahan --</option>
@@ -95,6 +69,70 @@
 
                                     <div class="image-previews mt-3 d-flex flex-wrap" id="image-previews">
                                         <!-- Preview gambar akan ditampilkan di sini -->
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header bg-light">
+                                            <h5 class="mb-0">Pilih Ukuran dan Stok</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="table-responsive">
+                                                <table class="table table-bordered" id="ukuran-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th width="50px">Pilih</th>
+                                                            <th>Ukuran</th>
+                                                            <th>Panjang Badan</th>
+                                                            <th>Panjang Tangan</th>
+                                                            <th>Lebar Dada</th>
+                                                            <th width="150px">Stok</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach($ukurans as $ukuran)
+                                                        <tr>
+                                                            <td class="text-center">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input ukuran-checkbox" type="checkbox" 
+                                                                           name="ukuran_id[]" value="{{ $ukuran->id }}" 
+                                                                           id="ukuran-{{ $ukuran->id }}"
+                                                                           {{ in_array($ukuran->id, old('ukuran_id', [])) ? 'checked' : '' }}
+                                                                           onchange="toggleUkuranStok(this)">
+                                                                </div>
+                                                            </td>
+                                                            <td>{{ $ukuran->ukuran_baju }}</td>
+                                                            <td>{{ $ukuran->panjang_badan }} cm</td>
+                                                            <td>{{ $ukuran->panjang_tangan }} cm</td>
+                                                            <td>{{ $ukuran->lebar_dada }} cm</td>
+                                                            <td>
+                                                                <input type="number" class="form-control stok-input" 
+                                                                       name="stok[{{ $loop->index }}]" 
+                                                                       value="{{ old('stok.' . $loop->index, 0) }}"
+                                                                       min="0" 
+                                                                       {{ !in_array($ukuran->id, old('ukuran_id', [])) ? 'disabled' : '' }}>
+                                                            </td>
+                                                        </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                    <tfoot>
+                                                        <tr>
+                                                            <th colspan="5" class="text-end">Total Stok:</th>
+                                                            <th><span id="total-stok">0</span></th>
+                                                        </tr>
+                                                    </tfoot>
+                                                </table>
+                                            </div>
+                                            @error('ukuran_id')
+                                                <div class="text-danger mt-2">{{ $message }}</div>
+                                            @enderror
+                                            @error('stok.*')
+                                                <div class="text-danger mt-2">{{ $message }}</div>
+                                            @enderror
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -143,5 +181,40 @@
             }
         }
     }
+    
+    function toggleUkuranStok(checkbox) {
+        const row = checkbox.closest('tr');
+        const stokInput = row.querySelector('.stok-input');
+        
+        stokInput.disabled = !checkbox.checked;
+        if (!checkbox.checked) {
+            stokInput.value = 0;
+        }
+        
+        updateTotalStok();
+    }
+    
+    function updateTotalStok() {
+        let total = 0;
+        const stokInputs = document.querySelectorAll('.stok-input:not([disabled])');
+        
+        stokInputs.forEach(input => {
+            total += parseInt(input.value) || 0;
+        });
+        
+        document.getElementById('total-stok').textContent = total;
+    }
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add event listeners to all stok inputs
+        const stokInputs = document.querySelectorAll('.stok-input');
+        stokInputs.forEach(input => {
+            input.addEventListener('input', updateTotalStok);
+        });
+        
+        // Calculate initial total
+        updateTotalStok();
+    });
 </script>
 @endsection

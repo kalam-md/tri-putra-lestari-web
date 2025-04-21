@@ -53,8 +53,15 @@
                     </a>
                 </li>
 
-                <li class="sidebar-item {{ Route::is('pesanan*') ? 'active' : '' }}">
-                    <a href="{{ route('pesanan.index') }}" class='sidebar-link'>
+                <li class="sidebar-item {{ Route::is('keranjang*') ? 'active' : '' }}">
+                    <a href="{{ route('keranjang.index') }}" class='sidebar-link'>
+                        <i class="bi bi-cart-fill"></i>
+                        <span>Keranjang</span>
+                    </a>
+                </li>
+
+                <li class="sidebar-item {{ Route::is('orders*') ? 'active' : '' }}">
+                    <a href="{{ route('orders.index') }}" class='sidebar-link'>
                         <i class="bi bi-bag-check-fill"></i>
                         <span>Pesanan</span>
                     </a>
@@ -67,6 +74,7 @@
                     </a>
                 </li>
 
+                @can('isAdmin')
                 <li class="sidebar-item {{ Route::is('bahan-baju*') ? 'active' : '' }}">
                     <a href="{{ route('bahan-baju.index') }}" class='sidebar-link'>
                         <i class="bi bi-box-seam-fill"></i>
@@ -80,19 +88,23 @@
                         <span>Ukuran</span>
                     </a>
                 </li>
+                @endcan
 
-                <li class="sidebar-item  ">
-                    <a href="index.html" class='sidebar-link'>
+                <li class="sidebar-item {{ Route::is('profile.edit') ? 'active' : '' }}">
+                    <a href="{{ route('profile.edit') }}" class='sidebar-link'>
                         <i class="bi bi-person-circle"></i>
                         <span>Profil</span>
                     </a>
-                </li>
+                </li>                
 
-                <li class="sidebar-item  ">
-                    <a href="index.html" class='sidebar-link'>
+                <li class="sidebar-item">
+                    <form action="{{ route('logout') }}" method="POST" class='sidebar-link'>
+                        @csrf
                         <i class="bi bi-door-closed-fill"></i>
-                        <span>Logout</span>
-                    </a>
+                        <span>
+                            <button type="submit" style="all: unset; cursor: pointer">Logout</button>
+                        </span>
+                    </form>
                 </li>
             </ul>
         </div>

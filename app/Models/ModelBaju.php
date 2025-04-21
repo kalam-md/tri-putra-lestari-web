@@ -11,9 +11,11 @@ class ModelBaju extends Model
 
     protected $guarded = ['id'];
 
-    public function ukuran()
+    public function ukurans()
     {
-        return $this->belongsTo(Ukuran::class, 'ukuran_id');
+        return $this->belongsToMany(Ukuran::class, 'model_baju_ukuran')
+                    ->withPivot('stok')
+                    ->withTimestamps();
     }
 
     // Relasi ke tabel BahanBaju
